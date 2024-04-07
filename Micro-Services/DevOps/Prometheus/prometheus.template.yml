@@ -1,0 +1,54 @@
+# my global config
+global:
+  scrape_interval:     5s # Set the scrape interval to every 5 seconds. Default is every 1 minute.
+  evaluation_interval: 5s # Evaluate rules every 5 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'front'
+    metrics_path: '/prometheus/metrics'
+    static_configs:
+    - targets: ['${HOST_IP}:8001']
+
+  - job_name: 'auth'
+    metrics_path: '/prometheus/metrics'
+    static_configs:
+    - targets: ['${HOST_IP}:8002']
+
+  - job_name: 'game'
+    metrics_path: '/prometheus/metrics'
+    static_configs:
+    - targets: ['${HOST_IP}:8003']
+
+  - job_name: 'janken'
+    metrics_path: '/prometheus/metrics'
+    static_configs:
+    - targets: ['${HOST_IP}:8004']
+
+  - job_name: 'tournament'
+    metrics_path: '/prometheus/metrics'
+    static_configs:
+    - targets: ['${HOST_IP}:8005']
+
+  - job_name: 'nodeExporter'
+    static_configs: 
+      - targets: ['${HOST_IP}:9100']

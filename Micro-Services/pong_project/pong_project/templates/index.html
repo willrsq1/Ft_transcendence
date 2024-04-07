@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+{% load static %}
+{% csrf_token %}
+
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ecole 42</title>
+	<link rel="icon" href="{% static 'assets/images/favicon.ico' %}" />
+	<link rel="stylesheet" href="{% static 'css/style.css' %}">
+	<link rel="manifest" href="{% static 'site.webmanifest' %}">
+</head>
+
+<body>
+	<main>
+		<header class="banner">
+			<h1 id="home-banner" data-fr="Ecole 42" data-en="42 school" data-es="Escuela 42">42 school</h1>
+			<div id="login-banner" style="display: none;">
+				<p id="welcomeMessage" style="display: inline-block;">
+					<span data-fr="Bienvenue" data-en="Welcome" data-es="Bienvenido">Welcome</span>, <span id="banner-nickname-display">NO NICKNAME</span> !
+				</p>
+				<select id="language-dropdown">
+					<option value="" disabled selected>Language</option>
+					<option value="fr" data-fr="Francais" data-en="French" data-es="Frances">French</option>
+					<option value="es" data-fr="Espagnol" data-en="Spanish" data-es="Espanol">Spanish</option>
+					<option value="en" data-fr="Anglais" data-en="English" data-es="Ingles">English</option>
+				</select>
+				<img id="banner-profile-image-display" width="100" height="110" src="" alt="User Image" style="display: inline-block;">
+				<button id="logout-button" type="submit" style="display: inline-block;" data-fr="Déconnexion" data-en="Logout" data-es="Cerrar sesion">Logout</button>
+			</div>
+		</header>
+		<div id="isLogged" style="display: none;">
+			<div id="logged-in-home" style="display: none;">
+				<div id="home-left">
+					<button id="myprofile-button" data-fr="Mon profil" data-en="My profile" data-es="Mi perfil">My profile</button>
+					<button id="play-pong-button" data-fr="Jouer à Pong" data-en="Play Pong" data-es="Jugar a Pong">Play Pong</button>
+				</div>
+				<div id="home-right">
+					<button id="janken-button" data-fr="Jouer à Janken" data-en="Play Janken" data-es="Jugar a Janken">Play Janken</button>
+					<button id="friends-button" data-fr="Amis" data-en="Friends" data-es="Amigos" data-count="0">Friends</button>
+				</div>
+				<button id="chatbot-button" data-fr="Pong Chatbot" data-en="Pong Chatbot" data-es="Pong Chatbot">Pong Chatbot</button>
+			</div>
+			<div id="game-div" style="display: none;">
+				<h1 id="game-div-p1"></h1>
+				<img id="game-div-test-K" width="50px" height="30px" src="auth/static/fleche-gauche.jpg"></img>
+				<img id="game-div-test-L" width="50px" height="30px" src="auth/static/fleche-droite.jpg"></img>
+				<div></div>
+				<canvas id="game-canvas" width="480" height="650"></canvas>
+				<div></div>
+				<img id="game-div-test-A" width="50px" height="30px" src="auth/static/fleche-gauche.jpg"></img>
+				<img id="game-div-test-S" width="50px" height="30px" src="auth/static/fleche-droite.jpg"></img>
+				<div></div>
+				<h1 id="game-div-p2"></h1>
+				<button id="game-div-test-ESC" data-en="Quit" data-es="Dejar" data-fr="Quitter">Quit</button>
+				<button id="game-div-test-Space" data-en="Pause" data-es="Pausa" data-fr="Pause">Pause</button>
+			</div>
+
+
+
+			<div id="friends" style="display:none">
+				<form id="add-friend-form">
+					<p id="add-friend-p" data-fr="Entrez le pseudonyme de la personne que vous souhaitez ajouter comme ami :" data-en="Input the nickname of who you want to add as friend:" data-es="Ingrese el apodo de la persona que desea agregar como amigo:"> Input the nickname of who you want to add as friend: </p>
+					<input type="add-friend" id="add-friend-input" name="add-friend" required>
+					<button id="submit-add-friend-button" type="submit" data-fr="Ajouter" data-en="Add" data-es="Agregar">Add</button>
+
+				</form>
+				<p id="friend-list-p" data-fr="Liste d'amis :" data-en="Friendlist :" data-es="Lista de amigos :"> Friendlist : </p>
+
+				<div id="friends-list">
+					<div id="friends-list-names"></div>
+					<div id="friends-list-delete"></div>
+				</div>
+				<p id="friend-requests-p" data-fr="Demandes d'amis :" data-en="Friend requests:" data-es="Solicitudes de amistad:"> Friend requests: </p>
+
+				<div id="friends-requests"></div>
+			</div>
+
+
+
+
+
+			<div id="friend-profile" style="display:none;">
+				<div id="friends-info">
+					<img src="" id="friend-profile-profile-picture-display" width="75" height="87" alt="profile picture">
+					<p id="friend-nickname-welcome-p" style="display: inline-block; margin-bottom: 0;"><span id="friend-profile-nickname-display"></span></p>
+					<p id="friend-online-status" style="display: inline-block;">
+						<span data-fr="statut : " data-en="status : " data-es="estatuto : ">status : </span>
+						<img src="auth/static/online.jpg" id="friend-online-status-image" width="40" height="40" alt="online status">
+					</p>
+				</div>
+				<div id="friend-history">
+					<div id="friend-profile-janken-history">
+						<p id="janken-history-p" data-fr="Historique de Janken" data-en="Janken History" data-es="Historial de Janken"> Janken History </p>
+						<p>
+							<span data-fr="Victoires : " data-en="Wins: " data-es="Victorias: ">Wins: </span>
+							<span id="friend-janken-history-wins"></span>
+						</p>
+						<p>
+							<span data-fr="Defaites : " data-en="Losses: " data-es="Perdidas: ">Losses: </span>
+							<span id="friend-janken-history-losses"></span>
+						</p>
+						<p style="display:none">
+							<span data-fr="Matchs nuls : " data-en="Draws: " data-es="Empates: ">Draws: </span>
+							<span id="friend-janken-history-draws"></span>
+						</p>
+						<p>
+							<span data-fr="Taux de victoire : " data-en="Winrate: " data-es="Porcentaje de victorias: ">Winrate: </span>
+							<span id="friend-winrate-janken-display"></span>
+						</p>
+					</div>
+					<div id="friend-profile-pong-all-history">
+						<p id="pong-history-p" data-fr="Historique de Pong" data-en="Pong History" data-es="Historial de Pong"> Pong History</p>
+						<p>
+							<span data-fr="Victoires : " data-en="Wins: " data-es="Victorias: ">Wins: </span>
+							<span id="friend-pong-history-wins"></span>
+						</p>
+						<p>
+							<span data-fr="Defaites : " data-en="Losses: " data-es="Pérdidas: ">Losses: </span>
+							<span id="friend-pong-history-losses"></span>
+						</p>
+						<p>
+							<span data-fr="Taux de victoire : " data-en="Winrate: " data-es="Porcentaje de victorias: ">Winrate: </span>
+							<span id="friend-winrate-game-display"></span>
+						</p>
+					</div>
+				</div>
+				<button id="friend-history-button" data-fr="Historique de jeux" data-en="Games History" data-es="Historial de juegos">Games History</button>
+				<div id="friend-profile-history-list" style="display:none">
+					<div id="friend-janken-history-list"></div>
+					<div id="friend-pong-history-list"></div>
+				</div>
+			</div>
+
+
+			<div id="profile" style="display: none;">
+				<div id="my-profile-history">
+					<img src="" id="profile-profile-picture-display" alt="profile picture">
+					<div id="my-profile-history-buttons">
+						<button id="profile-janken-history-button" data-fr="Mon historique de Janken" data-en="My Janken History" data-es="Mi historial de Janken">My Janken History</button>
+						<button id="profile-pong-history-button" data-fr="Mon historique de Pong" data-en="My Pong History" data-es="Mi historial de Pong">My Pong History</button>
+						<button id="profile-tournament-history" data-fr="Mon historique de tournois" data-en="My Tournaments History" data-es="Mi historial de torneos">My Tournaments History</button>
+					</div>
+				</div>
+				<form id="modify_email">
+					<p id="email-welcome-p">
+						<span data-fr="Mon e-mail : " data-en="My e-mail : " data-es="Mi correo electrónico: ">My e-mail : </span> <span id="profile-email-display"></span>
+					</p>
+					<label for="email_new" data-fr="courriel : " data-en="e-mail: " data-es="Correo electrónico: ">e-mail:</label>
+					<input type="email" id="email_new" name="email" autocomplete="email" required>
+					<button id="submit-email-button" type="submit" data-fr="Modifier" data-en="Modify" data-es="Modificar">modify</button>
+				</form>
+				<form id="modify_nickname">
+					<p id="nickname-welcome-p">
+						<span data-fr="Mon pseudonyme : " data-en="My nickname : " data-es="Mi apodo : ">My nickname : </span> <span id="profile-nickname-display"></span>
+					</p>
+					<label for="nickname_new" data-fr="Pseudonyme :" data-en="Nickname:" data-es="Apodo:">nickname:</label>
+					<input type="first_name" id="nickname_new" name="first_name" autocomplete="first_name" required>
+					<button id="submit-nickname-button" type="submit" data-fr="Modifier" data-en="Modify" data-es="Modificar">modify</button>
+				</form>
+				<form id="modify_password">
+					<p id="username-welcome-p">
+						<span data-fr="Mon nom d'utilisateur : " data-en="My username : " data-es="Mi nombre de usuario : ">My username : </span> <span id="profile-username-display"></span>
+					</p>
+					<div id="password-modif">
+						<label for="password_new" data-fr="Mot de passe :" data-en="Password:" data-es="Contraseña:">password:</label>
+						<input type="password" id="password_new" name="password" autocomplete="password" required>
+					</div>
+					<div id="password-modif2">
+						<label for="password_new2" data-fr="Confirmer le mot de passe :" data-en="Confirm password:" data-es="Confirmar la contraseña:">Confirm password:</label>
+						<input type="password" id="password_new2" name="password" autocomplete="password" required>
+						<button id="submit-password-button" type="submit" data-fr="Modifier" data-en="Modify" data-es="Modificar">modify</button>
+					</div>
+				</form>
+				<form id="modify_profile_picture">
+					<label for="profile_picture_new" data-fr="Photo de profil :" data-en="Profile picture:" data-es="Foto de perfil:">Profile picture:</label>
+					<input type="file" id="profile_picture_new" name="profile_picture" accept="image/*" required>
+					<button id="submit-profile-picture-button" type="submit" data-fr="Modifier" data-en="Modify" data-es="Modificar">modify</button>
+				</form>
+			</div>
+			<div id="pong-history" style="display:none;">
+				<p data-fr="Historique" data-en="History" data-es="Historia">History</p>
+				<p>
+					<span data-fr="Victoires : " data-en="Wins: " data-es="Victorias: ">Wins: </span>
+					<span id="pong-history-wins"></span>,
+					<span data-fr="Defaites : " data-en="Losses: " data-es="Derrotas: ">Losses: </span>
+					<span id="pong-history-losses"></span>,
+					<span data-fr="Taux de victoire : " data-en="Winrate : " data-es="Ratio de victorias : ">Winrate : </span>
+					<span id="pong-history-winrate"></span>
+				</p>
+				<button id="pong-history-back" data-fr="Retour au profil" data-en="Back to Profile" data-es="Volver al perfil">Back to Profile</button>
+				<div id="pong-history-list"></div>
+			</div>
+
+
+
+			<div id="janken" style="display:none;">
+				<button id="janken-create-game-button" data-fr="Creer une partie" data-en="Create a game" data-es="Crear una partida">Create a game</button>
+				<button id="janken-join-game-button" data-fr="Recherche d'adversaire" data-en="Matchmaking" data-es="Buscando oponente">Matchmaking</button>
+				<button id="janken-game-in-progress-button" data-fr="Partie en cours" data-en="Game in progress" data-es="Partida en curso">Game in progress</button>
+				<button id="janken-history-button" data-fr="Mon historique" data-en="My History" data-es="Mi historial">My History</button>
+			</div>
+			<div id="janken-history" style="display:none;">
+				<p data-fr="Historique" data-en="History" data-es="Historia">History</p>
+				<p>
+					<span data-fr="Victoires : " data-en="Wins: " data-es="Victorias: ">Wins: </span>
+					<span id="janken-history-wins"></span>,
+					<span data-fr="Defaites : " data-en="Losses: " data-es="Derrotas: ">Losses: </span>
+					<span id="janken-history-losses"></span>,
+					<span data-fr="Matchs nuls : " data-en="Draws: " data-es="Empates: ">Draws: </span>
+					<span id="janken-history-draws"></span>
+				</p>
+				<p>
+					<span data-fr="Taux de victoires :" data-en="Winrate :" data-es="Ratio de victorias :">Winrate :</span>
+					<span id="janken-history-winrate-display"></span>
+				</p>
+				<p>
+					<span data-fr="Coup le plus joue :" data-en="Most played choice :" data-es="Tiro más jugado :"> Most played choice :</span>
+					<span id="janken-history-most-played-choice"></span>
+				</p>
+				<button id="janken-history-back" data-fr="Retour a Janken" data-en="Back to Janken" data-es="Volver a Janken">Back to Janken</button>
+				<button id="janken-history-back-to-profile" data-fr="Retour au profil" data-en="Back to Profile" data-es="Volver al perfil">Back to Profile</button>
+				<div id="janken-history-list"></div>
+			</div>
+			<div id="janken-lobby" style="display:none;">
+				<p data-fr="En attente d'un adversaire..." data-en="Waiting for an opponent..." data-es="Esperando un oponente...">Waiting for an opponent...</p>
+				<button id="janken-cancel-game" data-fr="Annuler" data-en="Cancel" data-es="Cancelar">Cancel</button>
+				<button id="janken-lobby-back" data-fr="Retour au menu" data-en="Back to Menu" data-es="Volver al menu">Back to Menu</button>
+			</div>
+			<div id="janken-game" style="display:none;">
+				<p>
+				<p data-fr="Choisissez votre coup" data-en="Choose your move" data-es="Elige tu movimiento">Choose your move</p>
+				<span id="janken-game-opponent-nickname" data-fr="Vous jouez contre " data-es="Juegas contra " data-en="You are playing against ">You are playing against </span>
+				<span id="janken-game-opponent-nickname-nickname"></span>
+				</p>
+				<div id="janken-game-buttons">
+					<button id="rock-button"></button>
+					<button id="paper-button"></button>
+					<button id="scissors-button"></button>
+				</div>
+				<button id="janken-game-back" data-fr="Retour au menu" data-en="Back to Menu" data-es="Volver al menu">Back to Menu</button>
+			</div>
+			<div id="janken-already-played" style="display:none;">
+				<p>
+					<span data-fr="Vous avez déjà joué, en attente de " data-en="You already played, waiting for " data-es="Ya jugaste, esperando a ">You already played, waiting for </span>
+					<span id="janken-already-played-opponent-nickname"></span>
+					<span data-fr=" pour jouer !" data-en=" to play!" data-es=" para jugar!"></span>
+				</p>
+				<button id="janken-already-played-back" data-fr="Retour au menu" data-en="Back to Menu" data-es="Volver al menu">Back to Menu</button>
+			</div>
+			<div id="janken-result" style="display:none;">
+				<p id="janken-result-text"></p>
+				<p id="janken-result-result"></p>
+				<button id="janken-result-back" data-fr="Retour au menu" data-en="Back to Menu" data-es="Volver al menu">Back to Menu</button>
+			</div>
+
+
+
+			<div id="chatbot" style="display: none;">
+				<h1 id="title-chat">Pong's ChatBot </h1>
+				<img src="../static/images/chatgpt.jpg/" alt="chatgpt logo" height="50" width="50" class="chatgpt-center">
+				<h2 id="howcan" data-fr="Bonjour ! Comment puis-je vous aider aujourd'hui ?" data-en="Hello! How can I help you today?" data-es="¡Hola! ¿Cómo puedo ayudarte hoy?">Hello! How can I help you today?</h2>
+				<form id="OPENai">
+					<input type="text" id="OpenAIquestion" name="question" autocomplete="question" required placeholder="Message Pong's ChatBot...">
+				</form>
+			</div>
+
+			<div id="play" style="display: none;">
+				<button id="local-button" data-fr="Jouer en local" data-en="Play Local Game" data-es="Jugar juego local">Play Local Game</button>
+				<button id="ai-button" data-fr="Jouer contre l'IA" data-en="Play Against AI" data-es="Jugar contra IA">Play Against AI</button>
+				<button id="tournament-button" data-fr="Tournoi" data-en="Tournament" data-es="Torneo">Tournament</button>
+				<button id="remote-button" data-fr="Jouer a distance" data-en="Play Remote Game" data-es="Jugar juego remoto">Play Remote Game</button>
+			</div>
+
+
+			<div id="tournament-lobby" style="display: none;">
+				<p data-fr="Organiser un tournoi" data-en="Host a tournament" data-es="Organizar un torneo">Host a tournament</p>
+				<p>
+					<span id="tournament-host-nickname"></span>
+					<span data-fr=" sera l'hote" data-en=" will be the host" data-es=" sera el anfitrion"> will be the host</span>
+				</p>
+				<p data-en="Do not leave the tournament interface or your tournament will be cancelled." data-es="No abandone la interfaz del torneo o su torneo se perderá." data-fr="Ne quittez pas l'interface du tournoi ou votre tournoi sera annulé.">Do not leave the tournament interface or your tournament will be cancelled.</p>
+				<p data-fr="Entrez les pseudonymes des joueurs :" data-en="Input the nicknames of the players:" data-es="Ingrese los apodos de los jugadores:">Input the nicknames of the players:</p>
+				<form id="tournament-nicknames-form">
+					<label for="tournament-player-2" data-fr="Joueur 2 :" data-en="Player 2:" data-es="Jugador 2:">Player 2:</label>
+					<input type="username" id="tournament-player-2" name="tournament-p2" required>
+					<label for="tournament-player-3" data-fr="Joueur 3 :" data-en="Player 3:" data-es="Jugador 3:">Player 3:</label>
+					<input type="username" id="tournament-player-3" name="tournament-p3" required>
+					<label for="tournament-player-4" data-fr="Joueur 4 :" data-en="Player 4:" data-es="Jugador 4:">Player 4:</label>
+					<input type="username" id="tournament-player-4" name="tournament-p4" required>
+					<button id="create-tournament-button" type="submit" data-fr="Creer un tournoi" data-en="Create a tournament" data-es="Crear un torneo">Create a tournament</button>
+				</form>
+			</div>
+			<div id="tournament-display-start" style="display: none;">
+				<div id="tournament-display-start-div">
+					<p>
+						<span data-fr="Le premier match sera :" data-en="First match will be :" data-es="El primer partido será :">First match will be :</span>
+					</p>
+					<p>
+						<span id="tournament-display-p1"></span>
+						<span data-fr=" contre " data-en=" against " data-es=" contra "> against </span>
+						<span id="tournament-display-p2"></span>
+					</p>
+					<p>
+						<span data-fr="Le deuxième match sera :" data-en="Second match will be :" data-es="El segundo partido será :">Second match will be :</span>
+					</p>
+					<p>
+						<span id="tournament-display-p3"></span>
+						<span data-fr=" contre " data-en=" against " data-es=" contra "> against </span>
+						<span id="tournament-display-p4"></span>
+					</p>
+					<button id="tournament-game-start-button" data-fr="Demarrer la partie 1" data-en="Start game 1" data-es="Iniciar juego 1">Start game 1</button>
+				</div>
+			</div>
+			<div id="tournament-display-round2" style="display: none;">
+				<div id="tournament-display-round2-div">
+					<p>
+						<span id="tournament-display-first-match-winner" style="background-color: #98fb98;"></span>
+						<span data-fr=" a gagné et passe en finale !" data-en=" won and goes to final !" data-es=" ganó y va a la final !"> won and goes to final !</span>
+					</p>
+					<p>
+						<span id="tournament-display-first-match-loser" style="background-color: red;"></span>
+						<span data-fr=" a perdu, au revoir !" data-en=" lost, goodbye !" data-es=" perdió, adiós !"> lost, goodbye !</span>
+					</p>
+					<p>
+						<span data-fr="Le prochain match sera :" data-en="The next game will be :" data-es="El próximo partido será :">The next game will be :</span>
+					</p>
+					<p>
+						<span id="tournament-display-round2-p1"></span>
+						<span data-fr=" contre " data-en=" against " data-es=" contra "> against </span>
+						<span id="tournament-display-round2-p2"></span>
+					</p>
+					<button id="tournament-game-start-button-round2" data-fr="Demarrer la partie 2" data-en="Start game 2" data-es="Iniciar juego 2">Start game 2</button>
+				</div>
+			</div>
+			<div id="tournament-display-final" style="display: none;">
+				<div id="tournament-display-final-div">
+					<p>
+						<span id="tournament-display-second-match-winner" style="background-color: #98fb98;"></span>
+						<span data-fr=" a gagné et passe en finale !" data-en=" won and goes to final !" data-es=" ganó y va a la final !"> won and goes to final !</span>
+					</p>
+					<p>
+						<span id="tournament-display-second-match-loser" style="background-color: red;"></span>
+						<span data-fr=" a perdu, au revoir !" data-en=" lost, goodbye !" data-es=" perdió, adiós !"> lost, goodbye !</span>
+					</p>
+					<p>
+						<span data-fr="La finale opposera :" data-en="The final will be :" data-es="La final será entre :">The final will be :</span>
+					</p>
+					<p>
+						<span id="tournament-display-final-p1"></span>
+						<span data-fr=" contre " data-en=" against " data-es=" contra "> against </span>
+						<span id="tournament-display-final-p2"></span>
+					</p>
+					<button id="tournament-game-start-button-final" data-fr="Demarrer la finale" data-en="Start final" data-es="Iniciar final">Start final</button>
+				</div>
+			</div>
+			<div id="tournament-display-winner" style="display: none;">
+				<div id="tournament-display-winner-div">
+					<p>
+						<span id="tournament-display-final-winner" style="background-color: #98fb98;"></span>
+						<span data-fr=" a remporté le tournoi !" data-en=" won the tournament !" data-es=" ganó el torneo !"> won the tournament !</span>
+					</p>
+					<p>
+						<span data-fr="Deuxième place : " data-en="Second place: " data-es="Segundo lugar: ">Second place: </span>
+						<span id="tournament-display-final-loser" style="background-color: red;"></span>
+					</p>
+					<button id="tournament-back-to-menu" data-fr="Retour au Lobby Tournoi" data-en="Back to Tournament Lobby" data-es="Volver al Torneo">Back to Tournament Lobby</button>
+				</div>
+			</div>
+			<div id="tournament-history" style="display: none;">
+				<p data-fr="Historique" data-en="History" data-es="Historia">History</p>
+				<a href="https://sepolia.arbiscan.io/address/0xBac6dbc83d3e199dE19D387334f9bB524C6fbBCC#code" style="background-color: aqua;" target="_blank" data-en="Blockchain database " data-es="Base de datos blockchain " data-fr="Base de données blockchain " id="blockchain-link">Blockchain database </a>
+				<div id="tournament-history-list"></div>
+			</div>
+
+
+			<div id="janken-not-authorized" style="display: none;">
+				<p data-fr="Vous n'êtes pas dans une partie !" data-en="You are not in a game !" data-es="¡No estás en un juego!">You are not in a game !</p>
+				<button id="janken-not-authorized-back" data-fr="Retour a Janken" data-en="Back to Janken Home" data-es="Volver a Janken"> Back to Janken</button>
+			</div>
+			<div id="friend-not-found" style="display: none;">
+				<p></p>
+				<button id="friend-not-found-back"> Back to Friends </button>
+			</div>
+			<div id="pong-not-authorized" style="display: none;">
+				<p>You are not in a game !</p>
+				<button id="pong-not-authorized-back"> Back to Menu </button>
+			</div>
+			<div id="tournament-display-not-authorized" style="display: none;">
+				<p>You are not in a tournament !</p>
+				<button id="tournament-display-not-authorized-back"> Back to Menu </button>
+			</div>
+		</div>
+
+
+		<div id="isNotLogged" style="display: none;">
+			<div id="Login" style="display: none;">
+				<form id="loginForm">
+					<label for="username_login" data-fr="Nom d'utilisateur :" data-en="Username:" data-es="Nombre de usuario:">Username:</label>
+
+					<input type="text" id="username_login" name="username" autocomplete="username" required>
+					<label for="password_login" data-fr="Mot de passe :" data-en="Password:" data-es="Contraseña:">Password:</label>
+
+					<input type="password" id="password_login" name="password" autocomplete="current-password" required>
+					<button id="submit-login-button" type="submit" data-fr="Connexion" data-en="Login" data-es="Iniciar sesion">Login</button>
+
+				</form>
+			</div>
+			<div id="Register" style="display: none;">
+				<form id="registerForm">
+					<label for="username_register" data-fr="Nom d'utilisateur :" data-en="Username:" data-es="Nombre de usuario:">Username:</label>
+
+					<input type="text" id="username_register" name="username" autocomplete="username" required>
+					<label for="password1_register" data-fr="Mot de passe :" data-en="Password:" data-es="Contraseña:">Password:</label>
+
+					<input type="password" id="password1_register" name="password1" autocomplete="new-password" required>
+					<label for="password2_register" data-fr="Confirmer le mot de passe :" data-en="Confirm Password:" data-es="Confirmar contraseña:">Confirm Password:</label>
+
+					<input type="password" id="password2_register" name="password2" autocomplete="new-password" required>
+					<label for="email_address_register" data-fr="Saisissez votre email :" data-en="Input email:" data-es="Ingrese su correo electrónico:">Input email:</label>
+
+					<input type="email" id="email_address_register" name="email_address" autocomplete="email" required>
+					<label for="first_name_register" data-fr="Pseudonyme :" data-en="Nickname:" data-es="Apodo:">Nickname:</label>
+
+					<input type="text" id="first_name_register" name="first_name" autocomplete="given-name" required>
+					<button id="submit-register-button" type="submit" data-fr="S'inscrire" data-en="Register" data-es="Registrarse">Register</button>
+				</form>
+			</div>
+			<div id="not-logged-home" style="display: none;">
+				<button id="login-button" type="submit" data-fr="Se connecter" data-en="Login" data-es="Iniciar sesion">Login</button>
+				<button id="register-button" type="submit" data-fr="S'inscrire" data-en="Register" data-es="Registrarse">Register</button>
+				<button id="42-login-button" data-fr="Connexion via 42" data-en="42 login" data-es="Inicio de sesion 42">42 login</button>
+
+			</div>
+			<div id="Registered" style="display: none;">
+				<p data-fr="Vous avez été enregistré, vous pouvez maintenant vous connecter" data-en="You've been registered, you can now log in" data-es="Has sido registrado, ahora puedes iniciar sesión">You've been registered, you can now log in</p>
+			</div>
+		</div>
+		<div id="unauthorized" style="display: none;">
+			<p data-fr="Non autorisé" data-en="Unauthorized" data-es="No autorizado">Unauthorized</p>
+			<button id="unauthorized-button">Back to the home menu</button>
+		</div>
+		<div id="loading" style="display: block;">
+			<p data-fr="Chargement..." data-en="Loading..." data-es="Cargando...">Loading...</p>
+		</div>
+		<script> window.ASSETS_URL = "{% static '' %}" + "assets/"; </script>
+		<script type="module" src="{% static 'js/pong/ai.js' %}"></script>
+		<script type="module" src="{% static 'js/pong/game_manager.js' %}"></script>
+		<script type="module" src="{% static 'js/pong/game.js' %}"></script>
+		<script type="module" src="{% static 'js/pong/global.js' %}"></script>
+		<script type="module" src="{% static 'js/pong/graphics.js' %}"></script>
+		<script type="module" src='{% static "js/pong/input.js" %}'></script>
+		<script type="module" src="{% static 'js/pong/physics.js' %}"></script>
+		<script type="module" src="{% static 'js/pong/snapshot.js' %}"></script>
+		<script type="module" src='{% static "js/pong/sound.js" %}'></script>
+		<script type="module" src="{% static 'js/client.js' %}"></script>
+		<script type="module" src="{% static 'js/main.js' %}"></script>
+		<footer>
+
+		</footer>
+	</main>
+</body>
+
+</html>

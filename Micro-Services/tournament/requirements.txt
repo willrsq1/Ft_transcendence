@@ -1,0 +1,13 @@
+Django==5.0.1
+djangorestframework
+psycopg2
+psycopg2-binary
+django-cors-headers
+django-prometheus
+PyJWT
+uvicorn
+requests
+openai
+Pillow
+web3
+python-dotenv

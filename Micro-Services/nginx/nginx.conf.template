@@ -1,0 +1,175 @@
+# Define an upstream for each service
+upstream front_service {
+    server ${HOST_IP}:8001;
+}
+
+upstream auth_service {
+    server ${HOST_IP}:8002;
+}
+
+upstream game_service {
+    server ${HOST_IP}:8003;
+}
+
+upstream janken_service {
+    server ${HOST_IP}:8004;
+}
+
+upstream tournament_service {
+    server ${HOST_IP}:8005;
+}
+
+upstream prometheus_service {
+    server ${HOST_IP}:9090;
+}
+
+upstream grafana_service {
+    server ${HOST_IP}:9300;
+}
+
+
+
+
+# First server block for handling HTTPS connections
+server {
+    # Listen on port 443 (default port for HTTPS) and enable SSL
+    listen 8443 ssl http2;
+    listen [::]:8443 ssl http2;
+
+    # Define server names (domain names)
+    # Here, it listens to localhost and an IP address
+    server_name localhost ${HOST_IP};
+
+    # SSL certificate and key files location
+    ssl_certificate /etc/nginx/certs/cert.pem;
+    ssl_certificate_key /etc/nginx/certs/key.pem;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    #OCSP
+    # Enable OCSP Stapling for SSL/TLS certificates
+    # These directives allow the Nginx server to efficiently provide certificate validity status to clients.
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    # Configure DNS resolver for OCSP response resolution
+    # The server uses the IP address 8.8.8.8 (Google DNS) to resolve OCSP information.
+    # DNS records are cached for 300 seconds.
+    resolver 8.8.8.8 valid=300s;
+    resolver_timeout 5s;
+
+
+
+    client_max_body_size 100M;
+
+    # Define allowed SSL protocols
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers on;
+
+    # Location block for the root URL
+    location / {
+        # Proxy pass to forward requests to the Django application server
+        proxy_pass http://front_service/;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host; # Transmet le host demandé
+        proxy_set_header X-Real-IP $remote_addr; # Transmet l'adresse IP du client
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Pour le forwarding d'IP
+        proxy_set_header X-Forwarded-Proto $scheme; # Transmet le schéma utilisé (http ou https)
+        # Assurez-vous de transmettre le Cookie header pour conserver les cookies de session, y compris csrftoken
+        proxy_set_header Cookie $http_cookie;
+    }
+    
+
+        # Redirect requests to the auth service
+    location /auth/ {
+        proxy_pass http://auth_service/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host; # Transmet le host demandé
+        proxy_set_header X-Real-IP $remote_addr; # Transmet l'adresse IP du client
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Pour le forwarding d'IP
+        proxy_set_header X-Forwarded-Proto $scheme; # Transmet le schéma utilisé (http ou https)
+        # Assurez-vous de transmettre le Cookie header pour conserver les cookies de session, y compris csrftoken
+        proxy_set_header Cookie $http_cookie;
+    }
+
+        # Redirect requests to the game service
+    location /game/ {
+        proxy_pass http://game_service/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host; # Transmet le host demandé
+        proxy_set_header X-Real-IP $remote_addr; # Transmet l'adresse IP du client
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Pour le forwarding d'IP
+        proxy_set_header X-Forwarded-Proto $scheme; # Transmet le schéma utilisé (http ou https)
+        # Assurez-vous de transmettre le Cookie header pour conserver les cookies de session, y compris csrftoken
+        proxy_set_header Cookie $http_cookie;    
+        proxy_buffering off;
+    }
+    
+        # Redirect requests to the game service
+    location /janken/ {
+        proxy_pass http://janken_service/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host; # Transmet le host demandé
+        proxy_set_header X-Real-IP $remote_addr; # Transmet l'adresse IP du client
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Pour le forwarding d'IP
+        proxy_set_header X-Forwarded-Proto $scheme; # Transmet le schéma utilisé (http ou https)
+        # Assurez-vous de transmettre le Cookie header pour conserver les cookies de session, y compris csrftoken
+        proxy_set_header Cookie $http_cookie;    
+    }
+
+        # Redirect requests to the tournament service
+    location /tournament/ {
+        proxy_pass http://tournament_service/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host; # Transmet le host demandé
+        proxy_set_header X-Real-IP $remote_addr; # Transmet l'adresse IP du client
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Pour le forwarding d'IP
+        proxy_set_header X-Forwarded-Proto $scheme; # Transmet le schéma utilisé (http ou https)
+        # Assurez-vous de transmettre le Cookie header pour conserver les cookies de session, y compris csrftoken
+        proxy_set_header Cookie $http_cookie;    
+    }
+
+        # Redirect requests to the prometheus service
+    location /prometheus/ {
+        #allow 172.18.0.1; # Remplacez par l'adresse IP autorisée
+        #allow 127.0.0.1;
+        #deny all; # Refuse l'accès à toutes les autres adresses IP
+
+        proxy_pass http://prometheus_service;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host; # Transmet le host demandé
+        proxy_set_header X-Real-IP $remote_addr; # Transmet l'adresse IP du client
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Pour le forwarding d'IP
+        proxy_set_header X-Forwarded-Proto $scheme; # Transmet le schéma utilisé (http ou https)
+        # Assurez-vous de transmettre le Cookie header pour conserver les cookies de session, y compris csrftoken
+        proxy_set_header Cookie $http_cookie;    
+    }
+
+                # Redirect requests to the grafana service
+    location ~ ^/grafana/(.*) {
+    proxy_pass http://grafana_service/$1$is_args$args;
+
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Port $server_port;
+    }
+
+}
+
+# Second server block for redirecting HTTP to HTTPS
+server {
+    # Listen on port 80 (default port for HTTP) and set this as the default server
+    # for requests coming to port 80
+    listen 80 default_server;
+
+    # Default server name (catch-all)
+    server_name _;
+
+    # Redirect all HTTP requests to HTTPS
+    # $host and $request_uri are variables for the host and URI part of the request
+    return 301 https://$host$request_uri;
+}

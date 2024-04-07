@@ -1,0 +1,245 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./Micro-Services/nginx/nginx.conf.template:/etc/nginx/conf.d/default.conf.template
+      - ./Micro-Services/nginx/certs:/etc/nginx/certs
+      - ./Micro-Services/nginx/scriptConf.sh:/docker-entrypoint.d/init-nginx.sh
+    ports:
+      - '8080:8080'
+      - '8443:8443'
+    depends_on:
+      - pong_project
+      - authentification
+      - game_app
+      - janken
+    environment:
+      - HOST_IP=${HOST_IP}
+    networks:
+      - auth
+      - game_app
+      - tournament
+      - janken_app
+    command: /docker-entrypoint.d/init-nginx.sh
+
+
+  pong_project:
+    build:
+      context: ./Micro-Services/pong_project/
+      dockerfile: Dockerfile
+    environment:
+      - HOST_IP=${HOST_IP}
+      - SECRET_DJANGO_KEY=${SECRET_DJANGO_KEY}
+    volumes:
+      - ./Micro-Services/pong_project/:/app
+    ports:
+      - "8001:8000"
+    restart: on-failure
+
+  authentification:
+    container_name: auth
+    build:
+      context: ./Micro-Services/authentification
+      dockerfile: Dockerfile
+    environment:
+      - HOST_IP=${HOST_IP}
+      - OAUTH_APP_TOKEN_REQUEST=${OAUTH_APP_TOKEN_REQUEST}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_SECRET=${OAUTH_SECRET}
+      - OAUTH_STATE=${OAUTH_STATE}
+      - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI}
+      - OAUTH_USERS_PASSWORD=${OAUTH_USERS_PASSWORD}
+      - OPENAI_API_KEY=${OPEN_KEY}
+      - JANKEN_SECRET=${JANKEN_SECRET}
+      - SECRET_DJANGO_KEY=${SECRET_DJANGO_KEY}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./Micro-Services/authentification:/app
+    ports:
+      - "8002:8000"
+    networks:
+      - auth
+    depends_on:
+      - authentification_db
+    restart: on-failure
+
+  game_app:
+    container_name: game_app
+    build:
+      context: ./Micro-Services/game_app
+      dockerfile: Dockerfile
+    volumes:
+      - ./Micro-Services/game_app:/app
+    environment:
+      - HOST_IP=${HOST_IP}
+      - SECRET_DJANGO_KEY=${SECRET_DJANGO_KEY}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "8003:8000"
+    networks:
+      - game_app
+    depends_on:
+      - game_app_db
+    restart: on-failure
+
+  janken:
+    container_name: janken
+    build:
+      context: ./Micro-Services/janken_app/
+      dockerfile: Dockerfile
+    environment:
+      - HOST_IP=${HOST_IP}
+      - JANKEN_SECRET=${JANKEN_SECRET}
+      - SECRET_DJANGO_KEY=${SECRET_DJANGO_KEY}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./Micro-Services/janken_app/:/app
+    ports:
+      - "8004:8000"
+    networks:
+      - janken_app
+    depends_on:
+      - janken_db
+    restart: on-failure
+
+  authentification_db:
+    image: postgres:16-bookworm
+    volumes:
+      - auth_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: authentification_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - auth
+    ports:
+      - 5432
+    restart: on-failure
+
+  game_app_db:
+    image: postgres:16-bookworm
+    volumes:
+      - game_app_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: game_app_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - game_app
+    ports:
+      - 5432
+    restart: on-failure
+
+  janken_db:
+    image: postgres:16-bookworm
+    volumes:
+      - janken_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: janken_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - janken_app
+    ports:
+      - 5432
+    restart: on-failure
+
+
+  tournament:
+    build:
+      context: ./Micro-Services/tournament/
+      dockerfile: Dockerfile
+    environment:
+      - HOST_IP=${HOST_IP}
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - PROVIDER_URL=${PROVIDER_URL}
+      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+    volumes:
+      - ./Micro-Services/tournament/:/app
+    ports:
+      - "8005:8000"
+    restart: on-failure
+
+  prometheus:
+    build:
+      context: ./Micro-Services/DevOps/Prometheus
+      dockerfile: Dockerfile
+    environment:
+      - HOST_IP=${HOST_IP}
+    volumes:
+      - ./Micro-Services/DevOps/Prometheus/prometheus.template.yml:/etc/prometheus/prometheus.template.yml
+    ports:
+     - "9090:9090"
+    networks:
+    - auth
+    - game_app
+    - tournament
+    - janken_app
+    restart: on-failure
+
+  grafana:
+    build:
+      context: ./Micro-Services/DevOps/Grafana
+      dockerfile: Dockerfile
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./Micro-Services/DevOps/Grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./Micro-Services/DevOps/Grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./Micro-Services/DevOps/Grafana/dashboards:/var/lib/grafana/dashboards
+      - ./Micro-Services/DevOps/Grafana/init/custom_grafana.ini:/etc/grafana/grafana.ini
+    environment:
+      - HOST_IP=${HOST_IP}
+      - GF_SERVER_ROOT_URL=https://${HOST_IP}:8443/grafana
+      - GF_SECURITY_ADMIN_PASSWORD=yourpassword
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/config.json
+    ports:
+      - "9300:3000"
+    networks:
+    - auth
+    - game_app
+    - tournament
+    - janken_app
+    restart: on-failure
+
+
+volumes:
+  auth_db:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $AUTH_DB_VOL
+
+  game_app_db:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $GAME_APP_DB_VOL
+
+  janken_db:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $JANKEN_DB_VOL
+
+  grafana-storage:
+
+  prometheus-storage:
+
+
+networks:
+  auth:
+    driver: bridge
+  game_app:
+    driver: bridge
+  tournament:
+    driver: bridge
+  janken_app:
+    driver: bridge
